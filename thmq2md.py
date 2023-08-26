@@ -33,34 +33,24 @@ def extractData(tag, data="", clas="", url="", id1=""):
 	if data == "":
 		html = getData(url)
 		contents = BeautifulSoup(html, 'html5lib')
-		if clas == "" and id1 == "":
-			return contents.find_all(tag)
-		elif id1 != "" and clas== "":
-			return contents.find_all(tag, {"id":id1})
-		elif id1 == "" and clas != "":
-			return contents.find_all(tag, {"class":clas})
-		elif id1 != "" and clas != "" :
-			return contents.find_all(tag, {"id":id1},{"class":clas})
-	else :
+	else:
 		contents = BeautifulSoup(data, 'html5lib')
-		if clas == "" and id1 == "":
-			return contents.find_all(tag)
-		elif id1 != "" and clas== "":
-			return contents.find_all(tag, {"id":id1})
-		elif id1 == "" and clas != "":
-			return contents.find_all(tag, {"class":clas})
-		elif id1 != "" and clas != "" :
-			return contents.find_all(tag, {"id":id1},{"class":clas})
+	if clas == "" and id1 == "":
+		return contents.find_all(tag)
+	elif id1 != "" and clas== "":
+		return contents.find_all(tag, {"id":id1})
+	elif id1 == "":
+		return contents.find_all(tag, {"class":clas})
+	else:
+		return contents.find_all(tag, {"id":id1},{"class":clas})
 
 
 def filtering(data, tag):
-	d = re.finditer(r"<p>(.*)</p>", data)
-	return d
+	return re.finditer(r"<p>(.*)</p>", data)
 
 def cleanH(raw):
-  cleanr = re.compile('<.*?>')
-  cleantext = re.sub(cleanr, '', raw)
-  return cleantext
+	cleanr = re.compile('<.*?>')
+	return re.sub(cleanr, '', raw)
 
 def main():
 
@@ -89,23 +79,23 @@ def main():
 	source = getData(url)
 	tasks = getTotalQ(source)
 	room = extractData(data=source, id1="title", tag='h1')
-	f = open(file, 'w')
-	f.write(style)
-	f.write(f"#{H[0]} {room[0].get_text()}{H[1]}\n\n")
-	for task in tasks :
-		questions = str(extractData(data=source, id1=task.group(0), tag='div'))
-		question = str(extractData(data=questions, tag='div', clas='room-task-question-details'))
-		title = extractData(data=questions, clas="card-link", tag='a')
-		num = 1
-		for ti in title :
-			f.write(f"##{T[0]}"+str(ti.get_text()).strip()+f"{T[1]}\n")
-		da = filtering(question, "p")
-		for i in da :
-			f.write(f"\t{num}. **"+cleanH(i.group(1).strip())+f'**\n\t\t*{A[0]} answer here {A[1]}\n')
-			num+=1
-		f.write("\n<br>\n")
-	f.close()
+	with open(file, 'w') as f:
+		f.write(style)
+		f.write(f"#{H[0]} {room[0].get_text()}{H[1]}\n\n")
+		for task in tasks:
+			questions = str(extractData(data=source, id1=task.group(0), tag='div'))
+			question = str(extractData(data=questions, tag='div', clas='room-task-question-details'))
+			title = extractData(data=questions, clas="card-link", tag='a')
+			for ti in title:
+				f.write(f"##{T[0]}{str(ti.get_text()).strip()}" + f"{T[1]}\n")
+			da = filtering(question, "p")
+			for num, i in enumerate(da, start=1):
+				f.write(
+					f"\t{num}. **{cleanH(i.group(1).strip())}"
+					+ f'**\n\t\t*{A[0]} answer here {A[1]}\n'
+				)
+			f.write("\n<br>\n")
 	print("done")
 
-if '__main__' == __name__ :
+if __name__ == '__main__':
 	main()
